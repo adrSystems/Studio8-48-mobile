@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_account"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="Mi perfil" />
+        <item
+            android:id="@+id/nav_my_appointments"
+            android:icon="@drawable/ic_event_black_24dp"
+            android:title="Mis citas" />
+        <item
+            android:id="@+id/nav_purchased"
+            android:icon="@drawable/ic_local_grocery_store_black_24dp"
+            android:title="Mis compras" />
+        <item
+            android:id="@+id/nav_new_sale"
+            android:icon="@drawable/ic_add_shopping_cart_black_24dp"
+            android:title="Nueva venta" />
+        <item
+            android:id="@+id/nav_new_appointment"
+            android:icon="@drawable/ic_event_available_black_24dp"
+            android:title="Nueva cita" />
+    </group>
+
+    <item android:title="Más">
+        <menu>
+            <item
+                android:id="@+id/nav_web"
+                android:icon="@drawable/ic_web_black_24dp"
+                android:title="Ir a pagina oficial" />
+        </menu>
+    </item>
+
+</menu>
