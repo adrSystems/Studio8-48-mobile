@@ -3,6 +3,7 @@ package com.systems.adr_.studio8_48_mobile;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -28,6 +29,17 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +55,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * Id to identity READ_CONTACTS permission request.
      */
     private static final int REQUEST_READ_CONTACTS = 0;
+
+    private RequestQueue requestQueue;
 
     /**
      * A dummy authentication store containing known user names and passwords.
@@ -92,6 +106,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+
+        requestQueue = Volley.newRequestQueue(LoginActivity.this);
     }
 
     private void populateAutoComplete() {
@@ -143,6 +159,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * If there are form errors (invalid email, missing fields, etc.), the
      * errors are presented and no actual login attempt is made.
      */
+
     private void attemptLogin() {
         if (mAuthTask != null) {
             return;
@@ -156,48 +173,84 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         String email = mEmailView.getText().toString();
         String password = mPasswordView.getText().toString();
 
-        boolean cancel = false;
         View focusView = null;
 
         // Check for a valid password, if the user entered one.
         if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
             mPasswordView.setError(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
-            cancel = true;
+            focusView.requestFocus();
         }
-
         // Check for a valid email address.
-        if (TextUtils.isEmpty(email)) {
+        else if (TextUtils.isEmpty(email)) {
             mEmailView.setError(getString(R.string.error_field_required));
             focusView = mEmailView;
-            cancel = true;
-        } else if (!isEmailValid(email)) {
+            focusView.requestFocus();
+        }
+        else if (!isEmailValid(email)) {
             mEmailView.setError(getString(R.string.error_invalid_email));
             focusView = mEmailView;
-            cancel = true;
-        }
-
-        if (cancel) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
             focusView.requestFocus();
-        } else {
-            // Show a progress spinner, and kick off a background task to
-            // perform the user login attempt.
-            showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
-            mAuthTask.execute((Void) null);
+        }
+        else {
+            String url="http://studio8-48.esy.es/android/login/attempt/"
+                    +email+"/"
+                    +password;
+
+            JsonObjectRequest requestS=new JsonObjectRequest(
+                    Request.Method.GET, url, null,
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            try{
+                                if(response.getBoolean("result")){
+                                    Client c = new Client();
+                                    JSONObject cuentaJSON = response.getJSONObject("cuenta");
+                                    c.setName(cuentaJSON.getJSONObject("cliente").getString("nombre"));
+                                    c.setLastName(cuentaJSON.getJSONObject("cliente").getString("apellido"));
+                                    c.setHasCredit(Boolean.parseBoolean(cuentaJSON.getJSONObject("cliente").getString("credito")));
+                                    c.setPhone(cuentaJSON.getJSONObject("cliente").getString("telefono"));
+                                    c.setBirthday(cuentaJSON.getJSONObject("cliente").getString("fecha_nacimiento"));
+                                    c.setRegisterDate(cuentaJSON.getJSONObject("cliente").getString("fecha_registro"));
+                                    c.setId(cuentaJSON.getJSONObject("cliente").getInt("id"));
+                                    Account account = new Account();
+                                    account.setId(cuentaJSON.getInt("id"));
+                                    account.setActive(Boolean.parseBoolean(cuentaJSON.getString("active")));
+                                    account.setEmail(cuentaJSON.getString("email"));
+                                    account.setHasFB(Boolean.parseBoolean(cuentaJSON.getString("fb")));
+                                    account.setPhoto(cuentaJSON.getString("photo"));
+                                    c.setAccount(account);
+                                    showProgress(true);
+                                    Auth.getInstance().setClient(c, LoginActivity.this);
+                                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                    LoginActivity.this.startActivity(intent);
+                                }else{
+                                    Toast.makeText(LoginActivity.this, "Las credenciales son incorrectas!", Toast.LENGTH_SHORT).show();
+                                }
+                            }catch(Exception e){
+                                Toast.makeText(LoginActivity.this, "Error en la respuesta del servidor!", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Toast.makeText(LoginActivity.this, "Error de conexión!", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+            );
+            requestQueue.add(requestS);
         }
     }
 
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
-        return email.contains("@");
+        return email.contains("@") && email.contains(".");
     }
 
     private boolean isPasswordValid(String password) {
         //TODO: Replace this with your own logic
-        return password.length() > 4;
+        return password.length() > 5;
     }
 
     /**
@@ -299,9 +352,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         private final String mEmail;
         private final String mPassword;
 
-        UserLoginTask(String email, String password) {
-            mEmail = email;
-            mPassword = password;
+        UserLoginTask(Client c) {
+            mEmail = c.getAccount().getEmail();
+            mPassword = c.getAccount().getPassword();
         }
 
         @Override

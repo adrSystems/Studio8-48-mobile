@@ -1,5 +1,6 @@
 package com.systems.adr_.studio8_48_mobile;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -12,6 +13,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.squareup.picasso.Picasso;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -23,15 +28,6 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -40,6 +36,8 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+
     }
 
     @Override
@@ -56,6 +54,18 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+        ImageView iv = (ImageView) findViewById(R.id.imageViewProfilePhoto);
+        String photo = Auth.getInstance().getClient().getAccount().getPhoto();
+        if(!photo.equals(null) && !photo.equals("null"))
+        {
+            Picasso.with(this).load(Auth.getInstance().getClient().getAccount().getPhoto()).into(iv);
+        }
+        else
+        {
+            iv.setImageResource(R.drawable.rsz_default_profile_photo);
+        }
+        ((TextView)findViewById(R.id.textViewUserName)).setText(Auth.getInstance().getClient().getCompleteName());
+        ((TextView)findViewById(R.id.textViewEmail)).setText(Auth.getInstance().getClient().getAccount().getEmail());
         return true;
     }
 
@@ -68,6 +78,11 @@ public class MainActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_logout) {
+            LocalDBHelper dbHelper = new LocalDBHelper(this,"studio848",null,1);
+            dbHelper.getWritableDatabase().delete("auth","id is not null",null);
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+            finish();
             return true;
         }
 

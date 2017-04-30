@@ -7,10 +7,11 @@ import java.util.Date;
  */
 
 public class Person {
+    private int id;
     private String name;
     private String lastName;
-    private Date birthday;
-    private Date registerDate;
+    private String birthday;
+    private String registerDate;
     private Account account;
 
     public String getName() {
@@ -29,19 +30,19 @@ public class Person {
         this.lastName = lastName;
     }
 
-    public Date getBirthday() {
+    public String getBirthday() {
         return birthday;
     }
 
-    public void setBirthday(Date birthday) {
+    public void setBirthday(String birthday) {
         this.birthday = birthday;
     }
 
-    public Date getRegisterDate() {
+    public String getRegisterDate() {
         return registerDate;
     }
 
-    public void setRegisterDate(Date registerDate) {
+    public void setRegisterDate(String registerDate) {
         this.registerDate = registerDate;
     }
 
@@ -55,5 +56,13 @@ public class Person {
 
     public void setAccount(Account account) {
         this.account = account;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }
