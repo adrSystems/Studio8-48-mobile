@@ -49,6 +49,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -115,6 +116,7 @@ public class MainActivity extends AppCompatActivity
 
         Auth.getInstance().getClient().getNewAppointment().dateText = (TextView)findViewById(R.id.textViewAppointmnetDate);
 
+
     }
 
     @Override
@@ -173,10 +175,17 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
         ViewGroup vg = (ViewGroup)findViewById(R.id.linearMain);
         vg.removeAllViews();
-        if (id == R.id.nav_my_appointments) {
-            createOrShowNewAppointmentLayout(vg);
-        } else if (id == R.id.nav_new_appointment) {
 
+        //cambiar esto, mas bien marcará comochecked a los botones de los servicios que esten en el arraylist
+        ArrayList<Object> servicesList = Auth.getInstance().getClient().getNewAppointment().getServices();
+        for (int i = 0; i < servicesList.size(); i++){
+            servicesList.remove(i);
+        }
+
+        if (id == R.id.nav_my_appointments) {
+
+        } else if (id == R.id.nav_new_appointment) {
+            createOrShowNewAppointmentLayout(vg);
         } else if (id == R.id.nav_new_sale) {
 
         } else if (id == R.id.nav_purchased) {
@@ -295,6 +304,7 @@ public class MainActivity extends AppCompatActivity
                                                 s.setName(stylist.getString("nombre"));
                                                 s.setLastName(stylist.getString("apellido"));
                                                 s.setId(stylist.getInt("id"));
+                                                s.setPhoto(stylist.getString("fotografia"));
                                             } catch (JSONException e) {
                                                 e.printStackTrace();
                                             }

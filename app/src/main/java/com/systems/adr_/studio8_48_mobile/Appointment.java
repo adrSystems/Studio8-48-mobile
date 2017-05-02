@@ -20,7 +20,7 @@ public class Appointment {
     private Stylist stylist;
     public TextView dateText;
 
-    private double getAmount() throws JSONException {
+    public double getAmount() throws JSONException {
         double sum = 0;
         for (Object s: services) {
             JSONObject service = (JSONObject)s;
