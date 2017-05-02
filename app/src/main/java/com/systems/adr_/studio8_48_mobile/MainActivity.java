@@ -4,6 +4,7 @@ import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.media.Image;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
@@ -103,6 +104,7 @@ public class MainActivity extends AppCompatActivity
         today.put("hours", Calendar.getInstance().get(Calendar.HOUR_OF_DAY));
         today.put("minutes", Calendar.getInstance().get(Calendar.MINUTE));
 
+        //da error al volver del link, parece que se debera de settear al cliente que se vuelve null
         Auth.getInstance().getClient().setNewAppointment(new Appointment());
         Hashtable<String,Integer> date = new Hashtable<String, Integer>();
         date.put("day",today.get("day"));
@@ -173,25 +175,27 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-        ViewGroup vg = (ViewGroup)findViewById(R.id.linearMain);
-        vg.removeAllViews();
 
-        //cambiar esto, mas bien marcará comochecked a los botones de los servicios que esten en el arraylist
-        ArrayList<Object> servicesList = Auth.getInstance().getClient().getNewAppointment().getServices();
-        for (int i = 0; i < servicesList.size(); i++){
-            servicesList.remove(i);
-        }
+        ViewGroup vg = (ViewGroup)findViewById(R.id.linearMain);
 
         if (id == R.id.nav_my_appointments) {
 
         } else if (id == R.id.nav_new_appointment) {
+            vg.removeAllViews();
+
+            //cambiar esto, mas bien marcará comochecked a los botones de los servicios que esten en el arraylist
+            ArrayList<Object> servicesList = Auth.getInstance().getClient().getNewAppointment().getServices();
+            for (int i = 0; i < servicesList.size(); i++){
+                servicesList.remove(i);
+            }
             createOrShowNewAppointmentLayout(vg);
         } else if (id == R.id.nav_new_sale) {
 
         } else if (id == R.id.nav_purchased) {
 
         } else if (id == R.id.nav_web) {
-
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://studio8-48.esy.es"));
+            startActivity(intent);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
