@@ -3,10 +3,6 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_account"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="Mi perfil" />
-        <item
             android:id="@+id/nav_my_appointments"
             android:icon="@drawable/ic_event_black_24dp"
             android:title="Mis citas" />

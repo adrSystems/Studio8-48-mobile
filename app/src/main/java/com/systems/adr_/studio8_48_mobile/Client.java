@@ -7,6 +7,7 @@ package com.systems.adr_.studio8_48_mobile;
 public class Client extends Person {
     private String phone;
     private boolean hasCredit;
+    private Appointment newAppointment;
 
     public String getPhone() {
         return phone;
@@ -22,5 +23,13 @@ public class Client extends Person {
 
     public void setHasCredit(boolean hasCredit) {
         this.hasCredit = hasCredit;
+    }
+
+    public Appointment getNewAppointment() {
+        return newAppointment;
+    }
+
+    public void setNewAppointment(Appointment newAppointment) {
+        this.newAppointment = newAppointment;
     }
 }
