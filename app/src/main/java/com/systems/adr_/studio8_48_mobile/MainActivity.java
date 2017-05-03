@@ -26,6 +26,9 @@ import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
@@ -43,6 +46,7 @@ import com.squareup.picasso.Picasso;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -56,6 +60,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     LinearLayout llNewAppointment;
+    RelativeLayout rlMyAppointments;
     RequestQueue requestQueue;
     Hashtable<String, Integer> today = new Hashtable<String, Integer>();
 
@@ -105,6 +110,10 @@ public class MainActivity extends AppCompatActivity
         today.put("minutes", Calendar.getInstance().get(Calendar.MINUTE));
 
         //da error al volver del link, parece que se debera de settear al cliente que se vuelve null
+        if(Auth.getInstance().getClient() == null)
+        {
+            Toast.makeText(this, "El cliente es null", Toast.LENGTH_SHORT).show();
+        }
         Auth.getInstance().getClient().setNewAppointment(new Appointment());
         Hashtable<String,Integer> date = new Hashtable<String, Integer>();
         date.put("day",today.get("day"));
@@ -177,12 +186,13 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         ViewGroup vg = (ViewGroup)findViewById(R.id.linearMain);
+        Auth.getInstance().getClient().setAppointments(null);
 
         if (id == R.id.nav_my_appointments) {
-
+            vg.removeAllViews();
+            createOrShowMyAppointmentsLayout(vg);
         } else if (id == R.id.nav_new_appointment) {
             vg.removeAllViews();
-
             //cambiar esto, mas bien marcará comochecked a los botones de los servicios que esten en el arraylist
             ArrayList<Object> servicesList = Auth.getInstance().getClient().getNewAppointment().getServices();
             for (int i = 0; i < servicesList.size(); i++){
@@ -208,13 +218,13 @@ public class MainActivity extends AppCompatActivity
 
             View v = getLayoutInflater().inflate(R.layout.new_appointment_layout,vg,true);
             llNewAppointment = (LinearLayout) ((LinearLayout)v).getChildAt(0);
-            Calendar cal = Calendar.getInstance();
-            ((TextView)findViewById(R.id.textViewAppointmnetDate)).setText(cal.get(Calendar.DAY_OF_MONTH)+"/"+(cal.get(Calendar.MONTH)+1)+"/"+cal.get(Calendar.YEAR));
         }
         else
         {
             vg.addView(llNewAppointment);
         }
+        Calendar cal = Calendar.getInstance();
+        ((TextView)findViewById(R.id.textViewAppointmnetDate)).setText(cal.get(Calendar.DAY_OF_MONTH)+"/"+(cal.get(Calendar.MONTH)+1)+"/"+cal.get(Calendar.YEAR));
         today.put("day", Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
         today.put("month", Calendar.getInstance().get(Calendar.MONTH)+1);
         today.put("year", Calendar.getInstance().get(Calendar.YEAR));
@@ -222,6 +232,83 @@ public class MainActivity extends AppCompatActivity
         today.put("minutes", Calendar.getInstance().get(Calendar.MINUTE));
         getServices();
         getStylists();
+    }
+
+    private void createOrShowMyAppointmentsLayout(ViewGroup vg){
+        if(rlMyAppointments == null){
+            View v = getLayoutInflater().inflate(R.layout.my_appointments_layout,vg,true);
+            rlMyAppointments = (RelativeLayout) ((LinearLayout)v).getChildAt(0);
+            ((Button)findViewById(R.id.btnUpdate)).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    getAppointments();
+                }
+            });
+        }
+        else
+        {
+            vg.addView(rlMyAppointments);
+        }
+        //get my appointments, in new method
+        getAppointments();
+    }
+
+    private void getAppointments(){
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET, "http://studio8-48.esy.es/android/user/get-appointments/"+Auth.getInstance().getClient().getId(), null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try{
+                            if(response.getBoolean("result")){
+                                JSONArray apps = response.getJSONArray("appointments");
+                                Auth.getInstance().getClient().setAppointments(apps);
+                                ((TableLayout)findViewById(R.id.appsContainer)).removeAllViews();
+                                if(apps.length() < 1)
+                                {
+                                    ((LinearLayout)findViewById(R.id.llNoAppointments)).setVisibility(View.VISIBLE);
+                                    ((TableLayout)findViewById(R.id.appsContainer)).setVisibility(View.GONE);
+                                }
+                                else
+                                {
+                                    ((LinearLayout)findViewById(R.id.llNoAppointments)).setVisibility(View.GONE);
+                                    ((TableLayout)findViewById(R.id.appsContainer)).setVisibility(View.VISIBLE);
+                                    for (int i = 0; i < apps.length(); i++){
+                                        View v = getLayoutInflater().inflate(R.layout.appointment_item_layout, (TableLayout)findViewById(R.id.appsContainer), true);
+                                        TableRow item = (TableRow) ((TableLayout)v).getChildAt(((TableLayout)v).getChildCount()-1);
+                                        ((TextView)item.findViewById(R.id.tvDate)).setText(((JSONObject)apps.get(i)).getString("fecha"));
+                                        ((TextView)item.findViewById(R.id.tvTime)).setText(((JSONObject)apps.get(i)).getString("hora"));
+                                        ((TextView)item.findViewById(R.id.tvState)).setText(((JSONObject)apps.get(i)).getString("estadoString"));
+                                        JSONObject stylist = ((JSONObject)apps.get(i)).getJSONObject("empleado");
+                                        ((TextView)item.findViewById(R.id.tvStylist)).setText(stylist.getString("nombre")+" "+stylist.getString("apellido"));
+                                        ((Button)item.findViewById(R.id.btnInfoLauncher)).setTag(((JSONObject)apps.get(i)).getInt("id"));
+                                        ((Button)item.findViewById(R.id.btnInfoLauncher)).setOnClickListener(new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                Intent intent = new Intent(MainActivity.this, AppointmentDetailsActivity.class);
+                                                intent.putExtra("appointmentId", (Integer) v.getTag());
+                                                startActivity(intent);
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                            else{
+                                Toast.makeText(MainActivity.this, "Ha ocurrido un error.", Toast.LENGTH_SHORT).show();
+                            }
+                        }catch(Exception e){
+                            Toast.makeText(MainActivity.this, "Error en la respuesta del servidor.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(MainActivity.this, "Error de conexión!", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+        requestQueue.add(request);
     }
 
     private void getServices(){

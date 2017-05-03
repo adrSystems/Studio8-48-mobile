@@ -61,7 +61,7 @@ public class LoadActivity extends AppCompatActivity {
 
         timer.scheduleAtFixedRate(task,0,1000);
     }
-
+    int attemptsCount = 0;
     private void getUser(Cursor cur){
         String url="http://studio8-48.esy.es/android/user/get-by-id/"
                 +cur.getInt(0);
@@ -105,7 +105,15 @@ public class LoadActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(LoadActivity.this, "Error de conexión!", Toast.LENGTH_SHORT).show();
-                        getUser(curFinal);
+                        if(attemptsCount < 3)
+                        {
+                            attemptsCount++;
+                            getUser(curFinal);
+                        }
+                        else{
+                            finish();
+                        }
+
                     }
                 }
         );

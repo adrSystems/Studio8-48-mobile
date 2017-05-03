@@ -187,7 +187,7 @@
                     android:layout_height="wrap_content"
                     android:layout_centerHorizontal="true"
                     android:textSize="18sp"
-                    android:text="La solicitud de visa ha sido enviada con exito, espera mientras procesamos tu solicitud!"/>
+                    android:text="La solicitud de cita ha sido enviada con exito, espera mientras procesamos tu solicitud!"/>
                 <Button
                     android:layout_marginTop="15dp"
                     android:layout_below="@+id/tvSuccessDetails"

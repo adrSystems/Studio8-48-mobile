@@ -19,12 +19,16 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".MainActivity"
+            android:configChanges="orientation|screenSize"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".LoginActivity"
+            android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_login" />
-        <activity android:name=".LoadActivity">
+        <activity
+            android:name=".LoadActivity"
+            android:configChanges="orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -33,9 +37,11 @@
         </activity>
         <activity
             android:name=".DatePickerActivity"
+            android:configChanges="orientation|screenSize"
             android:label="Selecciona la fecha"
             android:theme="@style/Theme.AppCompat.Dialog" />
-        <activity android:name=".ConfirmAppointmentActivity"></activity>
+        <activity android:name=".ConfirmAppointmentActivity" />
+        <activity android:name=".AppointmentDetailsActivity"></activity>
     </application>
 
 </manifest>
