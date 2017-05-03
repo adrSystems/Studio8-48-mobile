@@ -208,7 +208,9 @@ public class MainActivity extends AppCompatActivity
             today.put("month", Calendar.getInstance().get(Calendar.MONTH)+1);
             today.put("year", Calendar.getInstance().get(Calendar.YEAR));
             appointment.setDate(today);
+
             Auth.getInstance().getClient().setNewAppointment(appointment);
+            Auth.getInstance().getClient().getNewAppointment().dateText = (TextView)findViewById(R.id.textViewAppointmnetDate);
 
             Button appointmentsDetailsBtn = (Button)findViewById(R.id.button_newAppointmentsDetails);
             appointmentsDetailsBtn.setOnClickListener(new View.OnClickListener() {
