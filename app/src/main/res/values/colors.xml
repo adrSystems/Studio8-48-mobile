@@ -12,4 +12,6 @@
     <color name="white3">#ddd</color>
     <color name="dodgerblue">#19f</color>
     <color name="greenMetalic">#1f9</color>
+    <color name="yellow">#ca0</color>
+    <color name="redClear">#f76</color>
 </resources>

@@ -83,52 +83,23 @@ public class MainActivity extends AppCompatActivity
         requestQueue = Volley.newRequestQueue(this);
 
         ViewGroup vg = (ViewGroup)findViewById(R.id.linearMain);
-        createOrShowNewAppointmentLayout(vg);
-
-        Button appointmentsDetailsBtn = (Button)findViewById(R.id.button_newAppointmentsDetails);
-        appointmentsDetailsBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                viewAppointmentsDetails(v);
-            }
-        });
-
-        Button changeDateBtn = (Button)findViewById(R.id.buttonChangeDateLauncher);
-        changeDateBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, DatePickerActivity.class);
-                startActivity(intent);
-
-            }
-        });
+        createOrShowMyAppointmentsLayout(vg);
 
         today.put("day", Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
         today.put("month", Calendar.getInstance().get(Calendar.MONTH)+1);
         today.put("year", Calendar.getInstance().get(Calendar.YEAR));
         today.put("hours", Calendar.getInstance().get(Calendar.HOUR_OF_DAY));
         today.put("minutes", Calendar.getInstance().get(Calendar.MINUTE));
-
-        //da error al volver del link, parece que se debera de settear al cliente que se vuelve null
-        if(Auth.getInstance().getClient() == null)
-        {
-            Toast.makeText(this, "El cliente es null", Toast.LENGTH_SHORT).show();
-        }
-        Auth.getInstance().getClient().setNewAppointment(new Appointment());
-        Hashtable<String,Integer> date = new Hashtable<String, Integer>();
-        date.put("day",today.get("day"));
-        date.put("month",today.get("month"));
-        date.put("year",today.get("year"));
-        Auth.getInstance().getClient().getNewAppointment().setDate(date);
-        Hashtable<String,Integer> time = new Hashtable<String, Integer>();
-        time.put("hours",today.get("hours"));
-        time.put("minutes",today.get("minutes"));
-        Auth.getInstance().getClient().getNewAppointment().setTime(time);
-
-        Auth.getInstance().getClient().getNewAppointment().dateText = (TextView)findViewById(R.id.textViewAppointmnetDate);
-
-
     }
+
+    /*@Override
+    public void onStart(){
+        super.onStart();
+        DrawerLayout draw = (DrawerLayout)findViewById(R.id.drawer_layout);
+        NavigationView navView = (NavigationView)findViewById(R.id.nav_view);
+        navView.setCheckedItem(R.id.nav_my_appointments);
+        //((MenuItem)findViewById(R.id.nav_my_appointments)).setChecked(true);
+    }*/
 
     @Override
     public void onBackPressed() {
@@ -186,18 +157,13 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         ViewGroup vg = (ViewGroup)findViewById(R.id.linearMain);
-        Auth.getInstance().getClient().setAppointments(null);
 
         if (id == R.id.nav_my_appointments) {
+            Auth.getInstance().getClient().setAppointments(null);
             vg.removeAllViews();
             createOrShowMyAppointmentsLayout(vg);
         } else if (id == R.id.nav_new_appointment) {
             vg.removeAllViews();
-            //cambiar esto, mas bien marcará comochecked a los botones de los servicios que esten en el arraylist
-            ArrayList<Object> servicesList = Auth.getInstance().getClient().getNewAppointment().getServices();
-            for (int i = 0; i < servicesList.size(); i++){
-                servicesList.remove(i);
-            }
             createOrShowNewAppointmentLayout(vg);
         } else if (id == R.id.nav_new_sale) {
 
@@ -213,11 +179,52 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        ///////////////////////////////
+        //recorrer items y si es my appointments, get services
+        NavigationView navView = (NavigationView)findViewById(R.id.nav_view);
+        if(navView.getMenu().findItem(R.id.nav_my_appointments).isChecked())
+        {
+            getAppointments();
+        }
+        else if(navView.getMenu().findItem(R.id.nav_new_appointment).isChecked())
+        {
+            getServices();
+            getStylists();
+        }
+
+    }
+
     private void createOrShowNewAppointmentLayout(ViewGroup vg){
         if(llNewAppointment == null){
 
             View v = getLayoutInflater().inflate(R.layout.new_appointment_layout,vg,true);
             llNewAppointment = (LinearLayout) ((LinearLayout)v).getChildAt(0);
+
+            Appointment appointment = new Appointment();
+            today.put("day", Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
+            today.put("month", Calendar.getInstance().get(Calendar.MONTH)+1);
+            today.put("year", Calendar.getInstance().get(Calendar.YEAR));
+            appointment.setDate(today);
+            Auth.getInstance().getClient().setNewAppointment(appointment);
+
+            Button appointmentsDetailsBtn = (Button)findViewById(R.id.button_newAppointmentsDetails);
+            appointmentsDetailsBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    viewAppointmentsDetails(v);
+                }
+            });
+            Button changeDateBtn = (Button)findViewById(R.id.buttonChangeDateLauncher);
+            changeDateBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(MainActivity.this, DatePickerActivity.class);
+                    startActivity(intent);
+                }
+            });
         }
         else
         {
@@ -225,11 +232,6 @@ public class MainActivity extends AppCompatActivity
         }
         Calendar cal = Calendar.getInstance();
         ((TextView)findViewById(R.id.textViewAppointmnetDate)).setText(cal.get(Calendar.DAY_OF_MONTH)+"/"+(cal.get(Calendar.MONTH)+1)+"/"+cal.get(Calendar.YEAR));
-        today.put("day", Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
-        today.put("month", Calendar.getInstance().get(Calendar.MONTH)+1);
-        today.put("year", Calendar.getInstance().get(Calendar.YEAR));
-        today.put("hours", Calendar.getInstance().get(Calendar.HOUR_OF_DAY));
-        today.put("minutes", Calendar.getInstance().get(Calendar.MINUTE));
         getServices();
         getStylists();
     }
@@ -320,6 +322,7 @@ public class MainActivity extends AppCompatActivity
                         try{
                             JSONArray services = response.getJSONArray("services");
                             LinearLayout servicesContainer = (LinearLayout)llNewAppointment.findViewById(R.id.llServicesContainer);
+                            ArrayList<Object> servicesList = Auth.getInstance().getClient().getNewAppointment().getServices();
                             servicesContainer.removeAllViews();
                             for (int i = 0; i < services.length(); i++){
                                 View v = getLayoutInflater().inflate(R.layout.service_item_layout, servicesContainer,true);
@@ -339,7 +342,23 @@ public class MainActivity extends AppCompatActivity
                                     @Override
                                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                                         if(isChecked){
-                                            Auth.getInstance().getClient().getNewAppointment().getServices().add(service);
+                                            ArrayList<Object> servicelist2 = Auth.getInstance().getClient().getNewAppointment().getServices();
+                                            boolean found = false;
+                                            for (int x = 0; x < servicelist2.size(); x++){
+                                                try {
+                                                    int sIdFromList = ((JSONObject)servicelist2.get(x)).getInt("id");
+                                                    int serviceId = service.getInt("id");
+                                                    if(sIdFromList == serviceId){
+                                                        found=true;
+                                                    }
+                                                }
+                                                catch (JSONException e) {
+                                                    e.printStackTrace();
+                                                }
+                                            }
+                                            if(!found){
+                                                Auth.getInstance().getClient().getNewAppointment().getServices().add(service);
+                                            }
                                         }
                                         else{
                                             Auth.getInstance().getClient().getNewAppointment().getServices().remove(service);
@@ -347,9 +366,16 @@ public class MainActivity extends AppCompatActivity
                                     }
                                 });
 
+                                for (int x = 0; x < servicesList.size(); x++){
+                                    if(((JSONObject)servicesList.get(x)).getInt("id") == service.getInt("id"))
+                                    {
+                                        ((ToggleButton)item.findViewById(R.id.toggle_btn)).setChecked(true);
+                                    }
+                                }
+
                             }
                         }catch(Exception e){
-                            Toast.makeText(MainActivity.this, "Error en la respuesta del servidor.", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
                     }
                 },
@@ -407,6 +433,11 @@ public class MainActivity extends AppCompatActivity
                                     }
                                 });
 
+                                Stylist currentStylist = Auth.getInstance().getClient().getNewAppointment().getStylist();
+                                if(currentStylist != null && currentStylist.getId() == stylist.getInt("id")){
+                                    ((ToggleButton)item.findViewById(R.id.toggle_btn)).setChecked(true);
+                                }
+
                             }
                         }catch(Exception e){
                             Toast.makeText(MainActivity.this, "Error en la respuesta del servidor.", Toast.LENGTH_SHORT).show();
@@ -424,14 +455,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void viewAppointmentsDetails(View v){
+        today.put("day", Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
+        today.put("month", Calendar.getInstance().get(Calendar.MONTH)+1);
+        today.put("year", Calendar.getInstance().get(Calendar.YEAR));
+        today.put("hours", Calendar.getInstance().get(Calendar.HOUR_OF_DAY));
+        today.put("minutes", Calendar.getInstance().get(Calendar.MINUTE));
+
         Hashtable<String,Integer> date = Auth.getInstance().getClient().getNewAppointment().getDate();
-        Hashtable<String,Integer> time = Auth.getInstance().getClient().getNewAppointment().getTime();
-        boolean fechaEsInferior = date.get("day") < today.get("day")
-                || date.get("month") < today.get("month")
-                || date.get("year") < today.get("year");
-        boolean esHoy = date.get("day") == today.get("day")
-                && date.get("month") == today.get("month")
-                && date.get("year") == today.get("year");
+        Hashtable<String,Integer> time = new Hashtable<String, Integer>();
+
         TimePicker tp = (TimePicker)findViewById(R.id.timePickerNewAppointment);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             time.put("minutes",tp.getMinute());
@@ -445,6 +477,15 @@ public class MainActivity extends AppCompatActivity
         else{
             time.put("hours",tp.getCurrentHour());
         }
+        Auth.getInstance().getClient().getNewAppointment().setTime(date);
+
+        boolean fechaEsInferior = date.get("day") < today.get("day")
+                || date.get("month") < today.get("month")
+                || date.get("year") < today.get("year");
+        boolean esHoy = date.get("day") == today.get("day")
+                && date.get("month") == today.get("month")
+                && date.get("year") == today.get("year");
+
         today.put("minutes",Calendar.getInstance().get(Calendar.MINUTE));
         today.put("hours",Calendar.getInstance().get(Calendar.HOUR_OF_DAY));
 

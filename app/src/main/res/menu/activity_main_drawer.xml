@@ -3,6 +3,7 @@
 
     <group android:checkableBehavior="single">
         <item
+            android:checked="true"
             android:id="@+id/nav_my_appointments"
             android:icon="@drawable/ic_event_black_24dp"
             android:title="Mis citas" />
@@ -15,7 +16,6 @@
             android:icon="@drawable/ic_add_shopping_cart_black_24dp"
             android:title="Nueva venta" />
         <item
-            android:checked="true"
             android:id="@+id/nav_new_appointment"
             android:icon="@drawable/ic_event_available_black_24dp"
             android:title="Nueva cita" />

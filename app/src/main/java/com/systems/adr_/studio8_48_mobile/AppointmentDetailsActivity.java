@@ -33,6 +33,18 @@ public class AppointmentDetailsActivity extends AppCompatActivity {
                     ((TextView)findViewById(R.id.tvDate)).setText(appointment.getString("fecha"));
                     ((TextView)findViewById(R.id.tvTime)).setText(appointment.getString("hora"));
                     ((TextView)findViewById(R.id.tvState)).setText(appointment.getString("estadoString"));
+                    if(appointment.getInt("estado") == 0)
+                    {
+                        ((TextView)findViewById(R.id.tvState)).setTextColor(getResources().getColor(R.color.yellow));
+                    }
+                    else if(appointment.getInt("estado") == 1)
+                    {
+                        ((TextView)findViewById(R.id.tvState)).setTextColor(getResources().getColor(R.color.dodgerblue));
+                    }
+                    else if(appointment.getInt("estado") == 5)
+                    {
+                        ((TextView)findViewById(R.id.tvState)).setTextColor(getResources().getColor(R.color.redClear));
+                    }
                     ((TextView)findViewById(R.id.tvMonto)).setText("$"+String.valueOf(appointment.getDouble("monto")));
                     JSONObject stylist = appointment.getJSONObject("empleado");
                     ((TextView)findViewById(R.id.tvStylistName)).setText(stylist.getString("nombre")+" "+stylist.getString("apellido"));
